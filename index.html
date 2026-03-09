@@ -1618,18 +1618,35 @@ let lastX = 0, lastY = 0;
 let currentTool = 'brush';
 
 function resizeCanvas() {
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  canvas.width = canvas.offsetWidth;
-  canvas.height = Math.min(500, window.innerHeight * 0.6);
+  // Save current drawing
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+  tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
+
+  // Resize using offsetWidth after layout
+  const w = canvas.parentElement.clientWidth - 80;
+  canvas.width = w > 0 ? w : 300;
+  canvas.height = Math.min(460, Math.max(280, window.innerHeight * 0.5));
+
   ctx.fillStyle = '#faf6f0';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // restore
-  ctx.putImageData(imageData, 0, 0);
+
+  // Restore previous drawing if any
+  if (tempCanvas.width > 0) {
+    ctx.drawImage(tempCanvas, 0, 0);
+  }
+  drawGuide();
 }
 
 resizeCanvas();
-ctx.fillStyle = '#faf6f0';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+// iPhone対応: レイアウト確定後に再初期化
+setTimeout(() => {
+  resizeCanvas();
+  ctx.fillStyle = '#faf6f0';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawGuide();
+}, 300);
 
 // Draw mandala guide (subtle)
 function drawGuide() {
@@ -1744,9 +1761,24 @@ canvas.addEventListener('mousedown', startDraw);
 canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('mouseup', stopDraw);
 canvas.addEventListener('mouseleave', stopDraw);
-canvas.addEventListener('touchstart', startDraw, { passive: false });
-canvas.addEventListener('touchmove', draw, { passive: false });
-canvas.addEventListener('touchend', stopDraw);
+
+// iPhone/iPad touch fix - use direct DOM style to block scroll on canvas
+canvas.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  startDraw(e);
+}, { passive: false, capture: true });
+
+canvas.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  draw(e);
+}, { passive: false, capture: true });
+
+canvas.addEventListener('touchend', function(e) {
+  e.preventDefault();
+  stopDraw();
+}, { passive: false, capture: true });
 
 // Tool buttons
 document.querySelectorAll('.tool-btn').forEach(btn => {
