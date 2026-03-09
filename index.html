@@ -1762,23 +1762,80 @@ canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('mouseup', stopDraw);
 canvas.addEventListener('mouseleave', stopDraw);
 
-// iPhone/iPad touch fix - use direct DOM style to block scroll on canvas
-canvas.addEventListener('touchstart', function(e) {
+// iPhone Chrome対応: PointerEventsを使用（touchより確実）
+canvas.addEventListener('pointerdown', function(e) {
   e.preventDefault();
-  e.stopPropagation();
-  startDraw(e);
-}, { passive: false, capture: true });
+  canvas.setPointerCapture(e.pointerId);
+  drawing = true;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  lastX = (e.clientX - rect.left) * scaleX;
+  lastY = (e.clientY - rect.top) * scaleY;
+  if (currentTool === 'fill') {
+    floodFill(Math.round(lastX), Math.round(lastY), hexToRgb(currentColor));
+    drawing = false;
+    return;
+  }
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, getBrushSize() / 2, 0, Math.PI * 2);
+  ctx.fillStyle = currentColor;
+  ctx.fill();
+}, { passive: false });
 
-canvas.addEventListener('touchmove', function(e) {
+canvas.addEventListener('pointermove', function(e) {
+  if (!drawing) return;
   e.preventDefault();
-  e.stopPropagation();
-  draw(e);
-}, { passive: false, capture: true });
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  const size = getBrushSize();
 
-canvas.addEventListener('touchend', function(e) {
-  e.preventDefault();
-  stopDraw();
-}, { passive: false, capture: true });
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (currentTool === 'eraser') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+    ctx.lineWidth = size * 1.5;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  } else if (currentTool === 'watercolor') {
+    ctx.globalAlpha = 0.08;
+    for (let i = 0; i < 3; i++) {
+      const ox = (Math.random() - 0.5) * size * 0.5;
+      const oy = (Math.random() - 0.5) * size * 0.5;
+      ctx.beginPath();
+      ctx.arc(x + ox, y + oy, size * (0.5 + Math.random() * 0.5), 0, Math.PI * 2);
+      ctx.fillStyle = currentColor;
+      ctx.fill();
+    }
+  } else {
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = size;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+  lastX = x;
+  lastY = y;
+}, { passive: false });
+
+canvas.addEventListener('pointerup', function(e) {
+  drawing = false;
+}, { passive: false });
+
+canvas.addEventListener('pointercancel', function(e) {
+  drawing = false;
+}, { passive: false });
 
 // Tool buttons
 document.querySelectorAll('.tool-btn').forEach(btn => {
