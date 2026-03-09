@@ -2,132 +2,1689 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>タッチテスト</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>いろのじかん — カラーアートセラピー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500&family=Zen+Maru+Gothic:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body {
-  height: 100%;
-  overflow: hidden;
-  background: #f5f0eb;
-  font-family: sans-serif;
-}
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  gap: 12px;
-}
-#log {
-  width: 100%;
-  max-width: 400px;
-  background: white;
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 0.8rem;
-  color: #555;
-  height: 80px;
-  overflow-y: auto;
-}
-canvas {
-  background: white;
-  border-radius: 12px;
-  border: 3px solid #e8b4b8;
-  display: block;
-  /* touch-action なし — まず素のままで試す */
-}
-button {
-  padding: 10px 28px;
-  border: none;
-  border-radius: 20px;
-  background: #e8b4b8;
-  color: white;
-  font-size: 1rem;
-}
+  :root {
+    --cream: #faf6f0;
+    --warm-white: #fff9f3;
+    --soft-sage: #b8c9a3;
+    --muted-rose: #e8b4b8;
+    --warm-lavender: #c4b5d4;
+    --peach: #f2c9a0;
+    --sky: #a8c8d8;
+    --text-dark: #4a3f35;
+    --text-mid: #7a6a5e;
+    --text-light: #a89888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    color: var(--text-dark);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: multiply;
+    transition: transform 0.15s ease, background 0.3s ease;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Floating background orbs */
+  .bg-orbs {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.35;
+    animation: floatOrb linear infinite;
+  }
+
+  @keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+    100% { transform: translate(0, 0) scale(1); }
+  }
+
+  /* Nav */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(250,246,240,0.95), transparent);
+  }
+
+  .logo {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.1rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: var(--text-dark);
+  }
+
+  .logo span {
+    color: var(--muted-rose);
+  }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 32px;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: var(--text-mid);
+    transition: color 0.3s;
+  }
+
+  nav ul li a:hover { color: var(--text-dark); }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    color: var(--text-light);
+    border: 1px solid rgba(180,160,140,0.3);
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 32px;
+    animation: fadeInUp 1s ease forwards;
+    opacity: 0;
+  }
+
+  .hero h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.3;
+    letter-spacing: 0.08em;
+    color: var(--text-dark);
+    animation: fadeInUp 1s 0.2s ease forwards;
+    opacity: 0;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--muted-rose);
+  }
+
+  .hero p {
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--text-mid);
+    max-width: 460px;
+    animation: fadeInUp 1s 0.4s ease forwards;
+    opacity: 0;
+    margin-bottom: 48px;
+  }
+
+  .hero-cta {
+    display: inline-block;
+    padding: 14px 44px;
+    background: var(--text-dark);
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 0.82rem;
+    letter-spacing: 0.2em;
+    border-radius: 40px;
+    animation: fadeInUp 1s 0.6s ease forwards;
+    opacity: 0;
+    transition: transform 0.3s, background 0.3s;
+  }
+
+  .hero-cta:hover {
+    background: var(--muted-rose);
+    transform: translateY(-2px);
+  }
+
+  /* Mood section */
+  .section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.3em;
+    color: var(--text-light);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1.6rem, 4vw, 2.6rem);
+    font-weight: 400;
+    line-height: 1.5;
+    margin-bottom: 48px;
+    color: var(--text-dark);
+  }
+
+  /* Mood picker */
+  .mood-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+
+  .mood-card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+  }
+
+  .mood-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  .mood-card.active {
+    border-color: currentColor;
+  }
+
+  .mood-emoji {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .mood-label {
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    color: var(--text-mid);
+  }
+
+  /* Color therapy canvas */
+  .therapy-container {
+    background: white;
+    border-radius: 28px;
+    padding: 40px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+    margin-bottom: 60px;
+  }
+
+  .therapy-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .therapy-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--text-dark);
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-control {
+    padding: 8px 18px;
+    border: 1px solid rgba(180,160,140,0.3);
+    border-radius: 20px;
+    background: var(--cream);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-control:hover {
+    background: var(--text-dark);
+    color: white;
+    border-color: var(--text-dark);
+  }
+
+  .brush-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
+
+  .brush-size input[type="range"] {
+    -webkit-appearance: none;
+    width: 80px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--text-dark), var(--muted-rose));
+    outline: none;
+  }
+
+  .brush-size input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-dark);
+    cursor: pointer;
+  }
+
+  canvas {
+    display: block;
+    border-radius: 16px;
+    cursor: none;
+    width: 100%;
+    touch-action: none;
+    -ms-touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+
+  .canvas-wrapper {
+    position: relative;
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+
+  /* Palette */
+  .palette-section {
+    margin-top: 24px;
+  }
+
+  .palette-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--text-light);
+    margin-bottom: 12px;
+  }
+
+  .palette-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .color-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 3px solid transparent;
+    position: relative;
+  }
+
+  .color-swatch:hover {
+    transform: scale(1.2);
+  }
+
+  .color-swatch.selected {
+    border-color: var(--text-dark);
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text-dark);
+  }
+
+  /* Color meaning */
+  .color-meaning {
+    background: var(--warm-white);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-top: 20px;
+    min-height: 64px;
+    transition: all 0.4s ease;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .color-meaning-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.4s;
+  }
+
+  .color-meaning-text {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--text-mid);
+  }
+
+  /* Affirmation section */
+  .affirmation-box {
+    background: linear-gradient(135deg, #f5efe8, #ede5f0);
+    border-radius: 24px;
+    padding: 48px 40px;
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .affirmation-quote {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    font-weight: 300;
+    line-height: 2;
+    color: var(--text-dark);
+    margin-bottom: 24px;
+    min-height: 4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .affirmation-btn {
+    padding: 10px 28px;
+    background: transparent;
+    border: 1px solid rgba(100,80,70,0.25);
+    border-radius: 20px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .affirmation-btn:hover {
+    background: var(--text-dark);
+    color: white;
+    border-color: var(--text-dark);
+  }
+
+  /* Breathing exercise */
+  .breathing-section {
+    background: white;
+    border-radius: 28px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.05);
+    margin-bottom: 60px;
+  }
+
+  .breath-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 32px auto;
+    background: radial-gradient(circle, var(--warm-lavender), var(--sky));
+    animation: breathe 8s ease-in-out infinite;
+    box-shadow: 0 0 40px rgba(196,181,212,0.4);
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(0.85); opacity: 0.7; }
+    40% { transform: scale(1.3); opacity: 1; }
+    60% { transform: scale(1.3); opacity: 1; }
+  }
+
+  .breath-text {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--text-light);
+    animation: breatheText 8s ease-in-out infinite;
+  }
+
+  @keyframes breatheText {
+    0%, 100% { opacity: 0.5; content: "息を吸って"; }
+    20% { opacity: 1; }
+    40% { opacity: 1; }
+    60% { opacity: 0.7; }
+    80% { opacity: 0.5; }
+  }
+
+  /* Footer */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 48px 24px;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    color: var(--text-light);
+    border-top: 1px solid rgba(180,160,140,0.15);
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in {
+    animation: fadeInUp 0.8s ease forwards;
+    opacity: 0;
+  }
+
+  /* Ripple effect */
+  .ripple {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    animation: rippleOut 0.6s ease forwards;
+  }
+
+  @keyframes rippleOut {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 0.4; }
+    to { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+  }
+
+  /* Tool selection */
+  .tool-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .tool-btn {
+    padding: 6px 16px;
+    border: 1px solid rgba(180,160,140,0.3);
+    border-radius: 14px;
+    background: var(--cream);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tool-btn.active, .tool-btn:hover {
+    background: var(--text-dark);
+    color: white;
+    border-color: var(--text-dark);
+  }
+
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    nav ul { display: none; }
+    .section { padding: 60px 20px; }
+    .therapy-container { padding: 24px 16px; }
+    .affirmation-box { padding: 36px 24px; }
+    .breathing-section { padding: 36px 24px; }
+  }
+
+  /* ===== COURSE SECTION ===== */
+  .course-intro {
+    text-align: center;
+    font-size: 0.92rem;
+    line-height: 2;
+    color: var(--text-mid);
+    margin-bottom: 52px;
+  }
+  .br-pc { display: block; }
+
+  .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+
+  .course-card {
+    background: white;
+    border-radius: 24px;
+    padding: 36px 28px;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.05);
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 2px solid transparent;
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  .course-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.3s, border 0.3s;
+  }
+
+  .course-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.1);
+  }
+
+  .course-card.featured {
+    border-color: var(--muted-rose);
+    background: linear-gradient(160deg, #fff9fb, #fff);
+  }
+
+  .course-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    padding: 4px 12px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+  .course-badge.online { background: #e8f4f8; color: #4a8aaa; }
+  .course-badge.offline { background: #e8f4e8; color: #4a8a5a; }
+  .course-badge.both { background: #f8e8f0; color: #aa5a78; }
+
+  .course-icon { font-size: 2rem; margin-bottom: 12px; }
+
+  .course-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+  }
+
+  .course-tag {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--text-light);
+    margin-bottom: 16px;
+  }
+
+  .course-desc {
+    font-size: 0.83rem;
+    line-height: 1.9;
+    color: var(--text-mid);
+    margin-bottom: 20px;
+  }
+
+  .course-details {
+    list-style: none;
+    margin-bottom: 28px;
+  }
+
+  .course-details li {
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(180,160,140,0.1);
+    letter-spacing: 0.05em;
+  }
+
+  .course-btn {
+    display: inline-block;
+    padding: 10px 28px;
+    border: 1px solid rgba(100,80,70,0.25);
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.78rem;
+    letter-spacing: 0.15em;
+    color: var(--text-mid);
+    font-family: 'Zen Maru Gothic', sans-serif;
+    transition: all 0.3s;
+  }
+
+  .course-btn:hover {
+    background: var(--text-dark);
+    color: white;
+    border-color: var(--text-dark);
+    transform: translateY(-1px);
+  }
+
+  .course-btn.primary {
+    background: var(--muted-rose);
+    color: white;
+    border-color: var(--muted-rose);
+  }
+
+  .course-btn.primary:hover {
+    background: #d09098;
+    border-color: #d09098;
+  }
+
+  /* ===== INSTRUCTOR ===== */
+  .instructor-wrap {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 64px;
+    align-items: center;
+    background: white;
+    border-radius: 32px;
+    padding: 56px 48px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.05);
+  }
+
+  .instructor-photo {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  .instructor-photo-inner {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8e8ec, #ede0f4, #dceef8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .instructor-avatar { font-size: 5rem; }
+
+  .instructor-deco {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 2px dashed rgba(232,180,184,0.4);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: spinSlow 20s linear infinite;
+  }
+
+  @keyframes spinSlow {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  .instructor-name {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+  }
+
+  .instructor-en {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--text-light);
+    margin-bottom: 24px;
+  }
+
+  .instructor-desc {
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--text-mid);
+    margin-bottom: 12px;
+  }
+
+  .instructor-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .badge {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    padding: 5px 14px;
+    border-radius: 14px;
+    background: var(--warm-white);
+    border: 1px solid rgba(180,160,140,0.2);
+    color: var(--text-mid);
+  }
+
+  /* ===== TESTIMONIALS ===== */
+  .testimonials {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .testimonial {
+    background: white;
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+  }
+
+  .testimonial-stars {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--peach);
+    margin-bottom: 16px;
+  }
+
+  .testimonial-text {
+    font-size: 0.85rem;
+    line-height: 2;
+    color: var(--text-mid);
+    margin-bottom: 16px;
+    font-style: italic;
+  }
+
+  .testimonial-author {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--text-light);
+  }
+
+  /* ===== FORM ===== */
+  .form-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .form-intro {
+    text-align: center;
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--text-mid);
+    margin-bottom: 40px;
+  }
+
+  .form-card {
+    background: white;
+    border-radius: 28px;
+    padding: 48px 44px;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.07);
+  }
+
+  .form-steps {
+    display: flex;
+    align-items: center;
+    margin-bottom: 40px;
+    gap: 0;
+  }
+
+  .form-step {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .form-step span {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(180,160,140,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .form-step.active {
+    color: var(--text-dark);
+  }
+
+  .form-step.active span {
+    background: var(--muted-rose);
+    color: white;
+  }
+
+  .form-step.done span {
+    background: var(--soft-sage);
+    color: white;
+  }
+
+  .step-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(180,160,140,0.2);
+    margin: 0 8px;
+  }
+
+  .field-group { margin-bottom: 24px; }
+
+  .field-label {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+  }
+
+  .req { color: var(--muted-rose); }
+
+  .field-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid rgba(180,160,140,0.25);
+    border-radius: 12px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text-dark);
+    background: var(--warm-white);
+    outline: none;
+    transition: border 0.2s;
+    cursor: text;
+  }
+
+  .field-input:focus {
+    border-color: var(--muted-rose);
+    background: white;
+  }
+
+  .field-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid rgba(180,160,140,0.25);
+    border-radius: 12px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text-dark);
+    background: var(--warm-white);
+    outline: none;
+    min-height: 120px;
+    resize: vertical;
+    transition: border 0.2s;
+    cursor: text;
+  }
+
+  .field-textarea:focus {
+    border-color: var(--muted-rose);
+    background: white;
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    cursor: pointer;
+  }
+
+  .radio-label input { accent-color: var(--muted-rose); cursor: pointer; }
+
+  .course-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .course-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border: 1.5px solid rgba(180,160,140,0.2);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--warm-white);
+  }
+
+  .course-option:hover {
+    border-color: var(--muted-rose);
+    background: #fff5f7;
+  }
+
+  .course-option.selected {
+    border-color: var(--muted-rose);
+    background: #fff0f3;
+  }
+
+  .co-name { font-size: 0.88rem; color: var(--text-dark); }
+  .co-price { font-size: 0.8rem; color: var(--text-light); letter-spacing: 0.05em; }
+
+  .form-next-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--text-dark);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 8px;
+  }
+
+  .form-next-btn:hover { background: var(--muted-rose); }
+
+  .form-row-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .form-back-btn {
+    flex: 0 0 auto;
+    padding: 14px 24px;
+    background: transparent;
+    color: var(--text-light);
+    border: 1.5px solid rgba(180,160,140,0.3);
+    border-radius: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .form-back-btn:hover { border-color: var(--text-mid); color: var(--text-mid); }
+
+  .form-submit-btn {
+    flex: 1;
+    padding: 14px;
+    background: var(--muted-rose);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .form-submit-btn:hover { background: #d09098; transform: translateY(-1px); }
+
+  .confirm-box {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    line-height: 2;
+    color: var(--text-mid);
+  }
+
+  .confirm-row {
+    display: flex;
+    gap: 12px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(180,160,140,0.1);
+  }
+
+  .confirm-row:last-child { border-bottom: none; }
+  .confirm-key { color: var(--text-light); min-width: 100px; font-size: 0.78rem; }
+  .confirm-val { color: var(--text-dark); }
+
+  .hidden { display: none !important; }
+  .form-page { animation: fadeInUp 0.4s ease forwards; }
+
+  .success-icon { font-size: 3.5rem; text-align: center; margin-bottom: 16px; }
+
+  .success-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    text-align: center;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+  }
+
+  .success-text {
+    text-align: center;
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--text-mid);
+    margin-bottom: 20px;
+  }
+
+  .success-note {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    letter-spacing: 0.1em;
+    padding: 10px 16px;
+    border: 1px dashed rgba(180,160,140,0.3);
+    border-radius: 10px;
+  }
+
+  /* ===== FOOTER ===== */
+  footer {
+    position: relative;
+    z-index: 1;
+    background: var(--text-dark);
+    color: rgba(255,255,255,0.6);
+    padding: 48px 48px 36px;
+  }
+
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .footer-logo {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 1.3rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: white;
+  }
+
+  .footer-logo span { color: var(--muted-rose); }
+
+  .footer-links {
+    display: flex;
+    gap: 28px;
+  }
+
+  .footer-links a {
+    text-decoration: none;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: white; }
+
+  .footer-copy {
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.3);
+  }
+
+  @media (max-width: 768px) {
+    .instructor-wrap { grid-template-columns: 1fr; gap: 32px; }
+    .instructor-photo-inner { width: 160px; height: 160px; }
+    .instructor-deco { width: 180px; height: 180px; }
+    .form-card { padding: 32px 20px; }
+    .form-steps { gap: 4px; }
+    .form-step { font-size: 0.65rem; }
+    .br-pc { display: none; }
+    footer { padding: 36px 24px; }
+  }
 </style>
 </head>
 <body>
-<div id="log">イベントログ：</div>
-<canvas id="c"></canvas>
-<button onclick="clearCanvas()">消す</button>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+
+<!-- Background orbs -->
+<div class="bg-orbs" id="bgOrbs"></div>
+
+<!-- Navigation -->
+<nav>
+  <div class="logo">いろの<span>じかん</span></div>
+  <ul>
+    <li><a href="#mood">気持ち</a></li>
+    <li><a href="#breath">呼吸</a></li>
+    <li><a href="#course">講座</a></li>
+    <li><a href="#apply" style="color:var(--muted-rose); font-weight:500;">申し込む</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">COLOR ART THERAPY</div>
+  <h1>色で、<em>こころ</em>を<br>ほぐす時間</h1>
+  <p>色彩には、言葉では伝えられない感情を映し出す力があります。今この瞬間、あなたの心に寄り添う色と遊んでみませんか。</p>
+  <a href="#mood" class="hero-cta">はじめる</a>
+</section>
+
+<!-- Mood Picker -->
+<section class="section" id="mood">
+  <div class="section-label">MOOD CHECK</div>
+  <h2 class="section-title">今の気持ちに<br>近いのはどれですか？</h2>
+
+  <div class="mood-grid" id="moodGrid">
+    <div class="mood-card" data-mood="calm" data-color="#a8c8d8" style="color:#a8c8d8">
+      <span class="mood-emoji">🌊</span>
+      <div class="mood-label">おだやか</div>
+    </div>
+    <div class="mood-card" data-mood="happy" data-color="#f2c9a0" style="color:#e8a060">
+      <span class="mood-emoji">☀️</span>
+      <div class="mood-label">うれしい</div>
+    </div>
+    <div class="mood-card" data-mood="anxious" data-color="#c4b5d4" style="color:#a090c0">
+      <span class="mood-emoji">🌙</span>
+      <div class="mood-label">もやもや</div>
+    </div>
+    <div class="mood-card" data-mood="tired" data-color="#b8c9a3" style="color:#7a9060">
+      <span class="mood-emoji">🍃</span>
+      <div class="mood-label">つかれた</div>
+    </div>
+    <div class="mood-card" data-mood="sad" data-color="#e8b4b8" style="color:#c07888">
+      <span class="mood-emoji">🌸</span>
+      <div class="mood-label">かなしい</div>
+    </div>
+    <div class="mood-card" data-mood="curious" data-color="#f9e4a0" style="color:#c8a030">
+      <span class="mood-emoji">✨</span>
+      <div class="mood-label">わくわく</div>
+    </div>
+  </div>
+  <div id="moodMessage" style="margin-top:24px; min-height:48px; font-size:0.9rem; line-height:1.9; color:var(--text-mid); text-align:center; transition:opacity 0.3s ease; padding:0 16px;"></div>
+</section>
+<section class="section">
+  <div class="affirmation-box">
+    <div class="affirmation-quote" id="affirmationText">
+      今日のあなたは、今日だけのあなたです。
+    </div>
+    <button class="affirmation-btn" id="affirmBtn">✦ 次のことば</button>
+  </div>
+</section>
+
+<!-- Breathing -->
+<section class="section" id="breath">
+  <div class="breathing-section">
+    <div class="section-label">BREATHING EXERCISE</div>
+    <h2 class="section-title" style="font-size:1.5rem; margin-bottom: 8px;">呼吸を整えましょう</h2>
+    <p style="font-size:0.85rem; color:var(--text-light); letter-spacing:0.1em;">円の動きに合わせて、ゆっくり呼吸してみてください</p>
+    <div class="breath-circle" id="breathCircle"></div>
+    <div class="breath-text" id="breathText">息を吸って...</div>
+  </div>
+</section>
+
+<!-- Course Section -->
+<section class="section" id="course">
+  <div class="section-label">COURSE</div>
+  <h2 class="section-title">講座のご案内</h2>
+
+  <div class="course-intro">
+    <p>カラーアートセラピーは、絵が苦手な方でも大丈夫。色を選び、自由に塗るだけで、<br class="br-pc">あなたの心が少しずつ、ほぐれていきます。</p>
+  </div>
+
+  <div class="course-grid">
+    <!-- Course 1 -->
+    <div class="course-card" data-delay="0">
+      <div class="course-badge online">オンライン</div>
+      <div class="course-icon">🎨</div>
+      <h3 class="course-name">はじめての<br>カラーセラピー体験会</h3>
+      <div class="course-tag">単発 / 初心者歓迎</div>
+      <p class="course-desc">色彩心理の基本と、自分の「今の色」を探すワークを体験。絵が苦手でも、道具不要で参加できます。</p>
+      <ul class="course-details">
+        <li>⏱ 90分</li>
+        <li>👥 少人数制（定員6名）</li>
+        <li>📅 毎月第2土曜・日曜</li>
+        <li>💴 ¥3,800（税込）</li>
+      </ul>
+      <a href="#apply" class="course-btn">申し込む</a>
+    </div>
+
+    <!-- Course 2 -->
+    <div class="course-card featured" data-delay="0.1">
+      <div class="course-badge both">オンライン / 対面</div>
+      <div class="course-icon">🌸</div>
+      <h3 class="course-name">こころの色を<br>見つける4週間講座</h3>
+      <div class="course-tag">全4回 / 継続コース</div>
+      <p class="course-desc">週に一度、自分の感情と向き合いながら色で表現するプロセスを丁寧にサポート。毎回テーマが変わります。</p>
+      <ul class="course-details">
+        <li>⏱ 各回120分 × 4回</li>
+        <li>👥 少人数制（定員4名）</li>
+        <li>📅 月曜または木曜の夜</li>
+        <li>💴 ¥18,000（税込）</li>
+      </ul>
+      <a href="#apply" class="course-btn primary">申し込む</a>
+    </div>
+
+    <!-- Course 3 -->
+    <div class="course-card" data-delay="0.2">
+      <div class="course-badge offline">対面</div>
+      <div class="course-icon">🍃</div>
+      <h3 class="course-name">自然の中で描く<br>週末ワークショップ</h3>
+      <div class="course-tag">単発 / 自然体験</div>
+      <p class="course-desc">緑に囲まれた空間で、季節の色を感じながらアートセラピーを体験。心と体をまるごとリセットする特別な一日。</p>
+      <ul class="course-details">
+        <li>⏱ 半日（約4時間）</li>
+        <li>👥 少人数制（定員8名）</li>
+        <li>📅 季節ごとに開催</li>
+        <li>💴 ¥8,500（税込・材料費込）</li>
+      </ul>
+      <a href="#apply" class="course-btn">申し込む</a>
+    </div>
+  </div>
+</section>
+
+<!-- Instructor Section -->
+<section class="section" id="instructor">
+  <div class="instructor-wrap">
+    <div class="instructor-photo">
+      <div class="instructor-photo-inner">
+        <div class="instructor-avatar">🌷</div>
+      </div>
+      <div class="instructor-deco"></div>
+    </div>
+    <div class="instructor-text">
+      <div class="section-label">INSTRUCTOR</div>
+      <h2 class="instructor-name">花村 さくら</h2>
+      <div class="instructor-en">Sakura Hanamura</div>
+      <p class="instructor-desc">色彩心理士・アートセラピスト。大学卒業後、広告会社でデザイナーとして働くなかで色彩の持つ心理的な力に魅了され、アートセラピーの道へ。</p>
+      <p class="instructor-desc">「描くことは、心を映す鏡」という信念のもと、言葉にしにくい感情を色と形で表現するセッションを続けています。参加者の「なんか楽になった」という言葉が、一番の力になっています。</p>
+      <div class="instructor-badges">
+        <span class="badge">色彩検定1級</span>
+        <span class="badge">アートセラピスト認定資格</span>
+        <span class="badge">産業カウンセラー</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section" id="voice">
+  <div class="section-label">VOICE</div>
+  <h2 class="section-title">受講者のことば</h2>
+  <div class="testimonials">
+    <div class="testimonial">
+      <div class="testimonial-stars">✦✦✦✦✦</div>
+      <p class="testimonial-text">「うまく描けなくていい」という言葉に、最初から救われました。色を選ぶだけで、自分の気持ちが整理されていく不思議な感覚がありました。</p>
+      <div class="testimonial-author">30代 会社員 / オンライン体験会</div>
+    </div>
+    <div class="testimonial">
+      <div class="testimonial-stars">✦✦✦✦✦</div>
+      <p class="testimonial-text">4週間通ったら、以前より自分に優しくなれた気がします。毎週の色の変化を見返すと、自分の変化がわかって面白かったです。</p>
+      <div class="testimonial-author">40代 主婦 / 4週間講座</div>
+    </div>
+    <div class="testimonial">
+      <div class="testimonial-stars">✦✦✦✦✦</div>
+      <p class="testimonial-text">自然の中でのワークショップ、最高でした。普段PCばかり見ている目が洗われるような感覚で、帰宅してからも気持ちが軽かったです。</p>
+      <div class="testimonial-author">20代 フリーランス / 週末ワークショップ</div>
+    </div>
+  </div>
+</section>
+
+<!-- Application Form -->
+<section class="section" id="apply">
+  <div class="section-label">APPLY</div>
+  <h2 class="section-title">お申し込み</h2>
+
+  <div class="form-wrap">
+    <div class="form-intro">
+      <p>お気軽にお申し込みください。<br>送信後、2営業日以内にメールでご連絡いたします。</p>
+    </div>
+
+    <div class="form-card" id="formCard">
+      <!-- Step indicator -->
+      <div class="form-steps">
+        <div class="form-step active" id="step1dot"><span>1</span> お名前・連絡先</div>
+        <div class="step-line"></div>
+        <div class="form-step" id="step2dot"><span>2</span> 講座選択</div>
+        <div class="step-line"></div>
+        <div class="form-step" id="step3dot"><span>3</span> 確認・送信</div>
+      </div>
+
+      <!-- Page 1 -->
+      <div class="form-page" id="formPage1">
+        <div class="field-group">
+          <label class="field-label">お名前 <span class="req">*</span></label>
+          <input type="text" id="fieldName" class="field-input" placeholder="花村 さくら">
+        </div>
+        <div class="field-group">
+          <label class="field-label">メールアドレス <span class="req">*</span></label>
+          <input type="email" id="fieldEmail" class="field-input" placeholder="your@email.com">
+        </div>
+        <div class="field-group">
+          <label class="field-label">参加形式のご希望</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="format" value="online" checked> オンライン</label>
+            <label class="radio-label"><input type="radio" name="format" value="offline"> 対面</label>
+            <label class="radio-label"><input type="radio" name="format" value="either"> どちらでも</label>
+          </div>
+        </div>
+        <button class="form-next-btn" onclick="goStep(2)">次へ進む →</button>
+      </div>
+
+      <!-- Page 2 -->
+      <div class="form-page hidden" id="formPage2">
+        <div class="field-group">
+          <label class="field-label">ご希望の講座 <span class="req">*</span></label>
+          <div class="course-select-group" id="courseSelect">
+            <div class="course-option" data-val="trial" onclick="selectCourse(this)">
+              <div class="co-name">はじめての体験会</div>
+              <div class="co-price">¥3,800</div>
+            </div>
+            <div class="course-option" data-val="4weeks" onclick="selectCourse(this)">
+              <div class="co-name">4週間講座</div>
+              <div class="co-price">¥18,000</div>
+            </div>
+            <div class="course-option" data-val="outdoor" onclick="selectCourse(this)">
+              <div class="co-name">週末ワークショップ</div>
+              <div class="co-price">¥8,500</div>
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">ご希望の日程（任意）</label>
+          <input type="text" id="fieldDate" class="field-input" placeholder="例：4月の土曜日、夜希望 など">
+        </div>
+        <div class="field-group">
+          <label class="field-label">アートセラピーのご経験</label>
+          <div class="radio-group">
+            <label class="radio-label"><input type="radio" name="exp" value="none" checked> はじめて</label>
+            <label class="radio-label"><input type="radio" name="exp" value="little"> 少しある</label>
+            <label class="radio-label"><input type="radio" name="exp" value="yes"> 経験あり</label>
+          </div>
+        </div>
+        <div class="form-row-btns">
+          <button class="form-back-btn" onclick="goStep(1)">← 戻る</button>
+          <button class="form-next-btn" onclick="goStep(3)">確認する →</button>
+        </div>
+      </div>
+
+      <!-- Page 3 - Confirm -->
+      <div class="form-page hidden" id="formPage3">
+        <div class="confirm-box" id="confirmBox"></div>
+        <div class="field-group">
+          <label class="field-label">メッセージ・ご質問（任意）</label>
+          <textarea id="fieldMsg" class="field-textarea" placeholder="ご不安なこと、お気軽にどうぞ。"></textarea>
+        </div>
+        <div class="form-row-btns">
+          <button class="form-back-btn" onclick="goStep(2)">← 戻る</button>
+          <button class="form-submit-btn" onclick="submitForm()">送信する ✦</button>
+        </div>
+      </div>
+
+      <!-- Success -->
+      <div class="form-page hidden" id="formSuccess">
+        <div class="success-icon">🌸</div>
+        <h3 class="success-title">お申し込みありがとうございます</h3>
+        <p class="success-text">ご登録のメールアドレスに、2営業日以内にご連絡いたします。<br>楽しみにお待ちください。</p>
+        <div class="success-note">迷惑メールフォルダもご確認ください</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">いろの<span>じかん</span></div>
+    <div class="footer-links">
+      <a href="#course">講座案内</a>
+      <a href="#instructor">講師紹介</a>
+      <a href="#apply">お申し込み</a>
+    </div>
+    <p class="footer-copy">© 2025 いろのじかん — あなたの心に、やすらぎを。</p>
+  </div>
+</footer>
 
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const log = document.getElementById('log');
+// ---- Custom cursor ----
+const cursor = document.getElementById('cursor');
+let currentColor = '#e8b4b8';
+cursor.style.background = currentColor;
+cursor.style.width = '20px';
+cursor.style.height = '20px';
 
-canvas.width = Math.min(window.innerWidth - 40, 380);
-canvas.height = 280;
-ctx.fillStyle = 'white';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
 
-let drawing = false, lastX = 0, lastY = 0, dotCount = 0;
-
-function addLog(msg) {
-  log.innerHTML += '<br>' + msg;
-  log.scrollTop = log.scrollHeight;
+// ---- Background orbs ----
+const orbColors = ['#e8b4b8','#c4b5d4','#a8c8d8','#b8c9a3','#f2c9a0','#f9e4a0'];
+const bgOrbs = document.getElementById('bgOrbs');
+for (let i = 0; i < 8; i++) {
+  const orb = document.createElement('div');
+  orb.className = 'orb';
+  const size = 200 + Math.random() * 300;
+  orb.style.cssText = `
+    width:${size}px; height:${size}px;
+    background:${orbColors[i % orbColors.length]};
+    left:${Math.random() * 100}%;
+    top:${Math.random() * 100}%;
+    animation-duration:${15 + Math.random() * 20}s;
+    animation-delay:${-Math.random() * 20}s;
+  `;
+  bgOrbs.appendChild(orb);
 }
 
-function pos(e) {
-  const r = canvas.getBoundingClientRect();
-  return {
-    x: (e.clientX - r.left) * (canvas.width / r.width),
-    y: (e.clientY - r.top) * (canvas.height / r.height)
-  };
+// ---- Ripple effect ----
+function createRipple(x, y, color) {
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.cssText = `left:${x}px; top:${y}px; width:60px; height:60px; background:${color};`;
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 700);
 }
 
-function dot(x, y) {
-  ctx.beginPath();
-  ctx.arc(x, y, 12, 0, Math.PI*2);
-  ctx.fillStyle = '#e8b4b8';
-  ctx.fill();
+document.addEventListener('click', e => {
+  createRipple(e.clientX, e.clientY, '#e8b4b844');
+});
+
+// ---- Mood Picker ----
+const moodMessages = {
+  calm: '青は心を静め、集中力を高めます。海や空のような広がりを感じさせる色です。',
+  happy: '橙と黄は喜びとエネルギーを象徴します。温かみと明るさで心を満たしてくれます。',
+  anxious: '紫はどこか神秘的で、内省を促す色です。自分の内側と向き合う助けになります。',
+  tired: '緑は自然の色。疲れた心を癒し、バランスと回復をもたらします。',
+  sad: 'ピンクは愛と優しさを伝えます。悲しみをそっと包み込んでくれる色です。',
+  curious: '黄色は知性と好奇心の色。新しい発見への期待で心が躍ります。'
+};
+
+document.querySelectorAll('.mood-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    const msg = moodMessages[card.dataset.mood];
+    const box = document.getElementById('moodMessage');
+    if (box) {
+      box.style.opacity = '0';
+      setTimeout(() => {
+        box.textContent = msg;
+        box.style.opacity = '1';
+      }, 200);
+    }
+    createRipple(
+      card.getBoundingClientRect().left + card.offsetWidth / 2,
+      card.getBoundingClientRect().top + card.offsetHeight / 2,
+      card.dataset.color
+    );
+  });
+});
+
+// ---- Affirmations ----
+const affirmations = [
+  'あなたの感情は、すべて正しい。',
+  '今日のあなたは、今日だけのあなたです。',
+  'ゆっくりでいい。あなたのペースで進もう。',
+  '色は言葉よりも正直に、心を映します。',
+  '休むことも、前進すること。',
+  '今この瞬間に、あなたはいる。それだけで十分です。',
+  'どんな感情にも、必ず意味がある。',
+  '自分に優しくすることは、わがままじゃない。',
+  '深呼吸。すべては、少しずつほぐれていく。',
+  '光があるから、影がある。あなたも同じ。',
+  '感じることを、恐れないで。',
+  'あなたはすでに、十分な存在です。',
+];
+
+let affirmIdx = 0;
+const affirmText = document.getElementById('affirmationText');
+
+document.getElementById('affirmBtn').addEventListener('click', () => {
+  affirmIdx = (affirmIdx + 1) % affirmations.length;
+  affirmText.style.opacity = '0';
+  affirmText.style.transform = 'translateY(10px)';
+  affirmText.style.transition = 'all 0.4s ease';
+  setTimeout(() => {
+    affirmText.textContent = affirmations[affirmIdx];
+    affirmText.style.opacity = '1';
+    affirmText.style.transform = 'translateY(0)';
+  }, 400);
+});
+
+// ---- Breathing ----
+const breathMessages = ['息を吸って...', '吸って...', '止めて...', '止めて...', 'ゆっくり吐いて...', '吐いて...', '吐いて...', '...'];
+let breathIdx = 0;
+const breathText = document.getElementById('breathText');
+
+setInterval(() => {
+  breathIdx = (breathIdx + 1) % breathMessages.length;
+  breathText.style.opacity = '0';
+  setTimeout(() => {
+    breathText.textContent = breathMessages[breathIdx];
+    breathText.style.opacity = '1';
+  }, 300);
+}, 3000);
+
+breathText.style.transition = 'opacity 0.3s ease';
+
+// ---- Scroll animations ----
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.therapy-container, .affirmation-box, .breathing-section').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'all 0.8s ease';
+  observer.observe(el);
+});
+
+window.addEventListener('resize', resizeCanvas);
+
+// ---- Course cards scroll animation ----
+const courseObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const delay = parseFloat(e.target.dataset.delay || 0);
+      setTimeout(() => e.target.classList.add('visible'), delay * 1000);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.course-card').forEach(c => courseObserver.observe(c));
+
+// ---- Multi-step form ----
+let selectedCourse = '';
+
+function goStep(n) {
+  // Validate
+  if (n === 2) {
+    const name = document.getElementById('fieldName').value.trim();
+    const email = document.getElementById('fieldEmail').value.trim();
+    if (!name || !email) {
+      shakeField(!name ? 'fieldName' : 'fieldEmail');
+      return;
+    }
+  }
+  if (n === 3) {
+    if (!selectedCourse) {
+      document.getElementById('courseSelect').style.animation = 'none';
+      document.getElementById('courseSelect').style.outline = '2px solid var(--muted-rose)';
+      document.getElementById('courseSelect').style.borderRadius = '12px';
+      setTimeout(() => document.getElementById('courseSelect').style.outline = '', 1500);
+      return;
+    }
+    buildConfirm();
+  }
+
+  ['formPage1','formPage2','formPage3'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('hidden', i !== n - 1);
+  });
+
+  ['step1dot','step2dot','step3dot'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i + 1 === n) el.classList.add('active');
+    else if (i + 1 < n) el.classList.add('done');
+  });
 }
 
-function line(x, y) {
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.strokeStyle = '#e8b4b8';
-  ctx.lineWidth = 24;
-  ctx.lineCap = 'round';
-  ctx.stroke();
+function shakeField(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--muted-rose)';
+  el.style.animation = 'shake 0.4s ease';
+  setTimeout(() => { el.style.animation = ''; el.style.borderColor = ''; }, 600);
 }
 
-// --- Touch Events (古い方式) ---
-canvas.addEventListener('touchstart', function(e) {
-  e.preventDefault();
-  drawing = true;
-  const p = pos(e.touches[0]);
-  lastX = p.x; lastY = p.y;
-  dot(p.x, p.y);
-  dotCount++;
-  addLog('touchstart (' + Math.round(p.x) + ',' + Math.round(p.y) + ')');
-}, { passive: false });
-
-canvas.addEventListener('touchmove', function(e) {
-  e.preventDefault();
-  if (!drawing) return;
-  const p = pos(e.touches[0]);
-  line(p.x, p.y);
-  lastX = p.x; lastY = p.y;
-  addLog('touchmove → 描画中');
-}, { passive: false });
-
-canvas.addEventListener('touchend', function(e) {
-  e.preventDefault();
-  drawing = false;
-  addLog('touchend');
-}, { passive: false });
-
-function clearCanvas() {
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  log.innerHTML = 'クリア！また描いてみて';
-  dotCount = 0;
+function selectCourse(el) {
+  document.querySelectorAll('.course-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCourse = el.dataset.val;
+  document.getElementById('courseSelect').style.outline = '';
 }
 
-addLog('準備OK — 指で描いてみて');
+function buildConfirm() {
+  const name = document.getElementById('fieldName').value;
+  const email = document.getElementById('fieldEmail').value;
+  const format = document.querySelector('input[name="format"]:checked')?.value;
+  const date = document.getElementById('fieldDate').value;
+  const exp = document.querySelector('input[name="exp"]:checked')?.value;
+  const courseNames = { trial:'はじめての体験会', '4weeks':'4週間講座', outdoor:'週末ワークショップ' };
+  const formatNames = { online:'オンライン', offline:'対面', either:'どちらでも' };
+  const expNames = { none:'はじめて', little:'少しある', yes:'経験あり' };
+
+  document.getElementById('confirmBox').innerHTML = `
+    <div class="confirm-row"><div class="confirm-key">お名前</div><div class="confirm-val">${name}</div></div>
+    <div class="confirm-row"><div class="confirm-key">メール</div><div class="confirm-val">${email}</div></div>
+    <div class="confirm-row"><div class="confirm-key">参加形式</div><div class="confirm-val">${formatNames[format] || '—'}</div></div>
+    <div class="confirm-row"><div class="confirm-key">ご希望の講座</div><div class="confirm-val">${courseNames[selectedCourse] || '—'}</div></div>
+    <div class="confirm-row"><div class="confirm-key">ご希望日程</div><div class="confirm-val">${date || '特になし'}</div></div>
+    <div class="confirm-row"><div class="confirm-key">ご経験</div><div class="confirm-val">${expNames[exp] || '—'}</div></div>
+  `;
+}
+
+function submitForm() {
+  ['formPage1','formPage2','formPage3'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('formSuccess').classList.remove('hidden');
+  ['step1dot','step2dot','step3dot'].forEach(id => {
+    document.getElementById(id).classList.remove('active');
+    document.getElementById(id).classList.add('done');
+  });
+  // Scroll to success
+  document.getElementById('formSuccess').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Shake keyframe
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }`;
+document.head.appendChild(styleSheet);
 </script>
 </body>
 </html>
