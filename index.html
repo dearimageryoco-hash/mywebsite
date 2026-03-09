@@ -329,6 +329,8 @@
     cursor: none;
     width: 100%;
     touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
   }
 
   /* Palette */
@@ -1655,10 +1657,11 @@ function getPos(e) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
-  if (e.touches) {
+  const touch = e.touches ? e.touches[0] : (e.changedTouches ? e.changedTouches[0] : null);
+  if (touch) {
     return {
-      x: (e.touches[0].clientX - rect.left) * scaleX,
-      y: (e.touches[0].clientY - rect.top) * scaleY
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY
     };
   }
   return {
