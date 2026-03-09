@@ -329,8 +329,17 @@
     cursor: none;
     width: 100%;
     touch-action: none;
+    -ms-touch-action: none;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+
+  .canvas-wrapper {
+    position: relative;
+    touch-action: none;
+    overscroll-behavior: none;
   }
 
   /* Palette */
@@ -1223,7 +1232,9 @@
       <button class="tool-btn" data-tool="fill">🪣 塗りつぶし</button>
     </div>
 
+    <div class="canvas-wrapper">
     <canvas id="therapyCanvas"></canvas>
+    </div>
 
     <div class="palette-section">
       <div class="palette-label">カラーパレット</div>
@@ -1767,6 +1778,7 @@ canvas.addEventListener('pointerdown', function(e) {
   e.preventDefault();
   canvas.setPointerCapture(e.pointerId);
   drawing = true;
+  document.body.style.overflow = 'hidden';
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
@@ -1786,6 +1798,7 @@ canvas.addEventListener('pointerdown', function(e) {
 canvas.addEventListener('pointermove', function(e) {
   if (!drawing) return;
   e.preventDefault();
+  e.stopPropagation();
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
@@ -1831,10 +1844,12 @@ canvas.addEventListener('pointermove', function(e) {
 
 canvas.addEventListener('pointerup', function(e) {
   drawing = false;
+  document.body.style.overflow = '';
 }, { passive: false });
 
 canvas.addEventListener('pointercancel', function(e) {
   drawing = false;
+  document.body.style.overflow = '';
 }, { passive: false });
 
 // Tool buttons
